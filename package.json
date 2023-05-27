@@ -1,0 +1,15 @@
+{
+  "name": "custom-bitcoin-script",
+  "version": "0.0.1",
+  "description": "Simple testbed for a custom bitcoin script",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Bilthon",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^20.2.5",
+    "typescript": "^5.0.4"
+  }
+}
