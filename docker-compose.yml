@@ -1,0 +1,107 @@
+version: '3.9'
+
+services:
+  # Bitcoin Core Dev
+  bitcoin-dev:
+    image: ghcr.io/vulpemventures/bitcoin:latest
+    container_name: bitcoin-dev-2
+    command:
+      - -datadir=.bitcoin
+    ports:
+      - 18443:18443
+      - 18444:18444
+      # ZMQ
+      - 28332:28332
+      - 28333:28333
+    volumes:
+      - ./.bitcoin.dev:/.bitcoin
+      - ./bitcoin.dev.conf:/.bitcoin/bitcoin.conf
+    restart: unless-stopped
+    networks:
+      - custom_script
+  # Bitcoin Core Prod
+  bitcoin-prod:
+    image: ghcr.io/vulpemventures/bitcoin:latest
+    container_name: bitcoin-prod
+    command:
+      - -datadir=config
+    ports:
+      - 8333:8333
+      - 8332:8332
+      # ZMQ
+      - 28332:28332
+      - 28333:28333
+    volumes:
+      - ./.bitcoin.prod:/.bitcoin
+      - ./bitcoin.prod.conf:/.bitcoin/bitcoin.conf
+    restart: unless-stopped
+    networks:
+      - custom_script
+  # Electrum Server Dev
+  electrs-dev:
+    image: getumbrel/electrs:v0.9.10
+    container_name: electrs-dev
+    environment:
+      ELECTRS_COOKIE_FILE: "/.bitcoin/regtest/.cookie"
+    command:
+      - --log-filters
+      - INFO
+      - --network
+      - regtest
+      - --daemon-dir
+      - /config
+      - --daemon-rpc-addr
+      - bitcoin-dev:18443
+      - --daemon-p2p-addr
+      - bitcoin-dev:18444
+      - --electrum-rpc-addr
+      - 0.0.0.0:50000
+    depends_on:
+      - bitcoin-dev
+    ports:
+      - 50000:50000
+      - 30000:30000
+    volumes:
+      - ./.electrs.dev/:/.electrs
+      - ./.bitcoin.dev/:/.bitcoin
+    restart: unless-stopped
+    networks:
+      - custom_script
+  # Electrum Server Prod
+  electrs-prod:
+    image: getumbrel/electrs:v0.9.10
+    container_name: electrs-prod-2
+    environment:
+      ELECTRS_COOKIE_FILE: "/.bitcoin/.cookie"
+    command:
+      - --log-filters
+      - INFO
+      - --network
+      - bitcoin
+      - --daemon-dir
+      - /build
+      - --daemon-rpc-addr
+      - bitcoin-prod:8332
+      - --daemon-p2p-addr
+      - bitcoin-prod:8333
+      - --electrum-rpc-addr
+      - 0.0.0.0:50001
+      - --db-dir
+      - "/.electrs"
+    depends_on:
+      - bitcoin-prod
+    ports:
+      - 50001:50001
+      - 30001:30001
+    volumes:
+      - ~/.electrs/:/.electrs
+      - ~/.bitcoin.prod/:/.bitcoin
+    restart: unless-stopped
+    networks:
+      - custom_script
+volumes:
+  litecoin-data:
+  electrumx-data:
+networks:
+  custom_script:
+    driver: bridge

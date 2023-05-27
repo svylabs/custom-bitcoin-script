@@ -1,3 +1,11 @@
 dist
 node_modules
 .env
+
+# Bitcoin datadir
+.bitcoin/*
+.bitcoin.dev/*
+
+# Electrs datadir
+.electrs/*
+.electrs.dev/*
