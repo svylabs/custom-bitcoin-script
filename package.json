@@ -2,14 +2,23 @@
   "name": "custom-bitcoin-script",
   "version": "0.0.1",
   "description": "Simple testbed for a custom bitcoin script",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
+    "build": "rimraf ./dist && tsc",
+    "dev": "npx nodemon",
+    "start": "npm run build && node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Bilthon",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^20.2.5",
+    "nodemon": "^2.0.22",
+    "rimraf": "^5.0.1",
     "typescript": "^5.0.4"
+  },
+  "dependencies": {
+    "@gemlinkofficial/electrum-client-ts": "github:bilthon/electrum-client-ts#master",
+    "bitcoinjs-lib": "^6.1.1"
   }
 }
