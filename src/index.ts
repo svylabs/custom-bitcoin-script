@@ -2,9 +2,9 @@ import { randomBytes } from 'crypto'
 import * as bitcoin from 'bitcoinjs-lib'
 import * as ecc from 'tiny-secp256k1'
 import ECPairFactory from 'ecpair'
-import { RegtestUtils } from 'regtest-client'
+import { RPCClient } from './client'
 
-const ECPair = ECPairFactory(ecc);
+const ECPair = ECPairFactory(ecc)
 
 // order id: 20afdf67, priv key: a0ec641c3e9fe4fe7e1fe14eb4a9c029d5ea2f07c586d1595a7f22a88f93b1fd
 // order id: cc4ac5d2, priv key: b7a88b58f71f349792e7c83683c9fb41978ff8584a216b7faa400e41580e0de4
@@ -46,11 +46,11 @@ const generateAddressData = (count: number) : AddressData[] => {
   return addressData
 }
 
-const main = () => {
+const main = async () => {
   // const addressData = generateAddressData(4)
   const addressData = FIXED_ADDRESS_DATA
 
-  const addresses = []
+  const addresses: string[] = []
   // Generating addresses
   addressData.forEach((addressData) => {
     const { orderId, privateKey } = addressData
@@ -72,9 +72,26 @@ const main = () => {
       redeem: { output: script },
       network: bitcoin.networks.regtest
     })
-    addresses.push(address)
+    addresses.push(address as string)
     console.log(`order id: ${orderId.toString('hex')}, public key: ${publicKey.toString('hex')} -> ${address}`)
   })
+  // Loading wallet and funding newly created addresses
+  const walletDir = await RPCClient.listWalletDir()
+  console.log('wallet dir: ', walletDir)
+  const wallets = await RPCClient.listWallets()
+  console.log('wallets: ', wallets)
+  const address = await RPCClient.getNewAddress() as string
+  console.log('address: ', address)
+  await RPCClient.generateToAddress(101, address)
+  const balance = await RPCClient.getBalance()
+  console.log('balance: ', balance)
+
+  const fundingTxIds = []
+  for(let i = 0; i < addresses.length; i++) {
+    const txid = await RPCClient.sendToAddress(addresses[i], 1)
+    console.log(`Sent funds to ${addresses[i]}, txid: `, txid)
+    fundingTxIds.push(txid)
+  }
 }
 
 main()

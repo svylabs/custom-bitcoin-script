@@ -19,6 +19,9 @@
   },
   "dependencies": {
     "@gemlinkofficial/electrum-client-ts": "github:bilthon/electrum-client-ts#master",
-    "bitcoinjs-lib": "^6.1.1"
+    "bitcoin-core": "^4.1.0",
+    "bitcoinjs-lib": "^6.1.1",
+    "ecpair": "^2.1.0",
+    "tiny-secp256k1": "^2.2.1"
   }
 }
