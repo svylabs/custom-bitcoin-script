@@ -18,10 +18,11 @@
     "typescript": "^5.0.4"
   },
   "dependencies": {
-    "@gemlinkofficial/electrum-client-ts": "github:bilthon/electrum-client-ts#master",
     "bitcoin-core": "^4.1.0",
     "bitcoinjs-lib": "^6.1.1",
+    "dotenv": "^16.0.3",
     "ecpair": "^2.1.0",
+    "electrum-client-ts": "github:bilthon/electrum-client-ts#master",
     "tiny-secp256k1": "^2.2.1"
   }
 }

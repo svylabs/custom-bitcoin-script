@@ -1,8 +1,12 @@
+import * as dotenv from 'dotenv'
 import { randomBytes } from 'crypto'
 import * as bitcoin from 'bitcoinjs-lib'
 import * as ecc from 'tiny-secp256k1'
 import ECPairFactory from 'ecpair'
 import { RPCClient } from './client'
+import { ElectrumService } from './electrum'
+
+dotenv.config()
 
 const ECPair = ECPairFactory(ecc)
 
@@ -46,7 +50,15 @@ const generateAddressData = (count: number) : AddressData[] => {
   return addressData
 }
 
+const sleep = (ms: number) => {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => resolve(0), ms)
+  })
+}
+
 const main = async () => {
+  // Instantiating electrum client
+  const electrum = new ElectrumService()
   // const addressData = generateAddressData(4)
   const addressData = FIXED_ADDRESS_DATA
 
@@ -82,15 +94,30 @@ const main = async () => {
   console.log('wallets: ', wallets)
   const address = await RPCClient.getNewAddress() as string
   console.log('address: ', address)
-  await RPCClient.generateToAddress(101, address)
+  const bestBlockHash = await RPCClient.getBestBlockHash()
+  const bestBlockHeader = await RPCClient.getBlockHeader(bestBlockHash)
+  if (bestBlockHeader.height < 100) {
+    await RPCClient.generateToAddress(100, address)
+  }
   const balance = await RPCClient.getBalance()
   console.log('balance: ', balance)
 
-  const fundingTxIds = []
+  const fundingTxIds: string[] = []
   for(let i = 0; i < addresses.length; i++) {
     const txid = await RPCClient.sendToAddress(addresses[i], 1)
     console.log(`Sent funds to ${addresses[i]}, txid: `, txid)
-    fundingTxIds.push(txid)
+    fundingTxIds.push(txid as string)
+  }
+  const blockIds = await RPCClient.generateToAddress(1, address) as string[]
+  await sleep(1000)
+  console.log('blocks id: ', blockIds)
+  const blockHeader = await RPCClient.getBlockHeader(blockIds[0])
+  console.log('blockHeader: ', blockHeader)
+  for (let i = 0; i < fundingTxIds.length; i++) {
+    const txHash = fundingTxIds[i]
+    const { height } = blockHeader
+    const merkleProof = await electrum.getMerkle(txHash, height)
+    console.log('merkle proof: ', merkleProof)
   }
 }
 

@@ -57,4 +57,16 @@ export class RPCClient {
         .catch((err: any) => reject(err))
     })
   }
+  static getBlock(hash: string) {
+    return client.getBlock(hash)
+  }
+  static getBlockHeader(hash: string) {
+    return client.getBlockHeader(hash)
+  }
+  static getBestBlockHash() {
+    return client.getBestBlockHash()
+  }
+  static getTransaction(hash: string) {
+    return client.getTransaction(hash)
+  }
 }
