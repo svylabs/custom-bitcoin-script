@@ -10,6 +10,8 @@ dotenv.config()
 
 const ECPair = ECPairFactory(ecc)
 
+const WALLET_NAME = 'nala'
+
 // order id: 20afdf67, priv key: a0ec641c3e9fe4fe7e1fe14eb4a9c029d5ea2f07c586d1595a7f22a88f93b1fd
 // order id: cc4ac5d2, priv key: b7a88b58f71f349792e7c83683c9fb41978ff8584a216b7faa400e41580e0de4
 // order id: 57a359dd, priv key: d114994c865ac49c2b1669a7488283e45a32e15df8fefd9d46dec5dfe9bc221b
@@ -63,7 +65,7 @@ const main = async () => {
   const addressData = FIXED_ADDRESS_DATA
 
   const addresses: string[] = []
-  // Generating addresses
+  // 1- Generating addresses
   addressData.forEach((addressData) => {
     const { orderId, privateKey } = addressData
 
@@ -87,11 +89,15 @@ const main = async () => {
     addresses.push(address as string)
     console.log(`order id: ${orderId.toString('hex')}, public key: ${publicKey.toString('hex')} -> ${address}`)
   })
-  // Loading wallet and funding newly created addresses
+  // 2- Loading wallet and funding newly created addresses
   const walletDir = await RPCClient.listWalletDir()
   console.log('wallet dir: ', walletDir)
-  const wallets = await RPCClient.listWallets()
+  const wallets = await RPCClient.listWallets() as any[]
   console.log('wallets: ', wallets)
+  if (wallets.length === 0) {
+    const wallet = await RPCClient.loadWallet(WALLET_NAME)
+    console.log('wallet: ', wallet)
+  }
   const address = await RPCClient.getNewAddress() as string
   console.log('address: ', address)
   const bestBlockHash = await RPCClient.getBestBlockHash()
@@ -113,11 +119,18 @@ const main = async () => {
   console.log('blocks id: ', blockIds)
   const blockHeader = await RPCClient.getBlockHeader(blockIds[0])
   console.log('blockHeader: ', blockHeader)
+  // 3- Fetching merke proofs
   for (let i = 0; i < fundingTxIds.length; i++) {
     const txHash = fundingTxIds[i]
     const { height } = blockHeader
     const merkleProof = await electrum.getMerkle(txHash, height)
     console.log('merkle proof: ', merkleProof)
+  }
+  // 4- Spending from outputs with custom scripts
+  const depositAddress = RPCClient.getNewAddress()
+  for (let i = 0; i < fundingTxIds.length; i++) {
+    const tx = await RPCClient.getTransaction(fundingTxIds[i])
+    console.log('tx: ', tx)
   }
 }
 

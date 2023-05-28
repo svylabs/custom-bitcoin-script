@@ -22,13 +22,6 @@ export class RPCClient {
         .catch((err: any) => reject(err))
     })
   }
-  static loadWallet(walletName: string) {
-    return new Promise((resolve, reject) => {
-      client.loadWallet(walletName)
-        .then((res: any) => resolve(res))
-        .catch((err: any) => reject(err))
-    })
-  }
   static getNewAddress() {
     return new Promise((resolve, reject) => {
       client.getNewAddress()
@@ -68,5 +61,8 @@ export class RPCClient {
   }
   static getTransaction(hash: string) {
     return client.getTransaction(hash)
+  }
+  static loadWallet(name: string) {
+    return client.loadWallet(name)
   }
 }
