@@ -65,4 +65,7 @@ export class RPCClient {
   static loadWallet(name: string) {
     return client.loadWallet(name)
   }
+  static sendRawTransaction(rawtx: string) {
+    return client.sendRawTransaction(rawtx)
+  }
 }
