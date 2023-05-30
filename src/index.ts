@@ -143,7 +143,7 @@ const main = async () => {
     const txHash = fundingTxIds[i]
     const { height } = blockHeader
     const merkleProof = await electrum.getMerkle(txHash, height)
-    // console.log('merkle proof: ', merkleProof)
+    console.log('merkle proof: ', merkleProof)
   }
   // 4- Generating a tx that will spend from outputs with custom scripts
   const destinationAddress = await RPCClient.getNewAddress() as string
