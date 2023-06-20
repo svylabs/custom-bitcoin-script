@@ -76,39 +76,9 @@ const sleep = (ms: number) => {
 const main = async () => {
   // Instantiating electrum client
   const electrum = new ElectrumService()
-  // const addressData = generateAddressData(4)
-  const addressData = FIXED_ADDRESS_DATA
-
-  const scripts: Buffer[] = []
-  const addresses: string[] = []
-  const payments: bitcoin.Payment[] = []
-  // 1- Generating addresses
-  addressData.forEach((addressData) => {
-    const { orderId, privateKey } = addressData
-
-    const ecPair = ECPair.fromPrivateKey(privateKey)
-    const publicKey = ecPair.publicKey
-    const pubkeyHash = bitcoin.crypto.hash160(publicKey)
-
-    const script = bitcoin.script.compile([
-      orderId,
-      bitcoin.opcodes.OP_DROP,
-      bitcoin.opcodes.OP_DUP,
-      bitcoin.opcodes.OP_HASH160,
-      pubkeyHash,
-      bitcoin.opcodes.OP_EQUALVERIFY,
-      bitcoin.opcodes.OP_CHECKSIG
-    ])
-    scripts.push(script)
-    const payment = bitcoin.payments.p2wsh({
-      // hash: bitcoin.crypto.sha256(script),
-      redeem: { output: script, network: bitcoin.networks.regtest }
-    })
-    payments.push(payment)
-    const { address } = payment
-    addresses.push(address as string)
-    console.log(`order id: ${orderId.toString('hex')}, public key: ${publicKey.toString('hex')} -> ${address}`)
-  })
+  const sendAddr = process.argv[2];
+  console.log(sendAddr);
+  const value = parseInt(process.argv[3] || '1');
   // 2- Loading wallet and funding newly created addresses
   const walletDir = await RPCClient.listWalletDir()
   console.log('wallet dir: ', walletDir)
@@ -129,87 +99,21 @@ const main = async () => {
   console.log('balance: ', balance);
   let blockIds = await RPCClient.generateToAddress(1, address) as string[]
   await sleep(1000);
-
-  const fundingTxIds: string[] = []
-  for(let i = 0; i < addresses.length; i++) {
-    const txid = await RPCClient.sendToAddress(addresses[i], 1)
-    console.log(`Sent funds to ${addresses[i]}, txid: `, txid)
-    fundingTxIds.push(txid as string)
-  }
+  const txid = await RPCClient.sendToAddress(sendAddr, value) as string;
+  console.log(txid);
+  const rawTx = await RPCClient.getTransaction(txid);
+  console.log(rawTx);
   blockIds = await RPCClient.generateToAddress(1, address) as string[]
   await sleep(1000)
   console.log('blocks id: ', blockIds)
   const blockHeader = await RPCClient.getBlockHeader(blockIds[0])
+  console.log(blockHeader);
+  const rawBlockHeader = await RPCClient.getRawBlockHeader(blockIds[0]);
   // 3- Fetching merke proofs
-  for (let i = 0; i < fundingTxIds.length; i++) {
-    const txHash = fundingTxIds[i]
-    const { height } = blockHeader
-    const merkleProof = await electrum.getMerkle(txHash, height)
-    console.log('merkle proof: ', merkleProof)
-  }
-  // 4- Generating a tx that will spend from outputs with custom scripts
-  const destinationAddress = await RPCClient.getNewAddress() as string
-  const vouts: Vout[] = []
-  for (let i = 0; i < fundingTxIds.length; i++) {
-    const txDetails = await RPCClient.getTransaction(fundingTxIds[i])
-    const tx = bitcoin.Transaction.fromHex(txDetails.hex)
-    tx.outs.forEach((out, index) => {
-      if (out.value === 1E8) {
-        vouts.push({
-          txid: tx.getId(),
-          index: index,
-          amount: out.value
-        })
-      }
-    })
-  }
-  const psbt = new bitcoin.Psbt({ network: bitcoin.networks.regtest })
-  for(let i = 0; i < vouts.length; i++) {
-    psbt.addInput({
-      witnessUtxo: {
-        script: payments[i].output!,
-        value: vouts[i].amount
-      },
-      witnessScript: scripts[i],
-      hash: vouts[i].txid,
-      index: vouts[i].index
-    })
-  }
-  psbt.addOutput({
-    address: destinationAddress,
-    value: vouts.reduce((accum, vout) => accum + vout.amount,0) - 1E3
-  })
-  for (let i = 0; i < psbt.inputCount; i++) {
-    const keyPair = FIXED_ADDRESS_DATA[i].keyPair
-    console.log(`Signing input ${i}`)
-    psbt.signInput(i, keyPair)
-  }
-  const finalizeInput = (inputIndex: number, input: PsbtInput, script: Buffer, isSegwit: boolean, isP2SH: boolean, isP2WSH: boolean) => {
-    const publicKey = FIXED_ADDRESS_DATA[inputIndex].keyPair.publicKey
-    const redeemPayment = bitcoin.payments.p2wsh({
-      redeem: {
-        input: bitcoin.script.compile([
-          // @ts-ignore
-          input.partialSig[0].signature,
-          publicKey
-        ]),
-        output: input.witnessScript
-      }
-    })
-    const finalScriptWitness = witnessStackToScriptWitness(
-      redeemPayment.witness ?? []
-    )
-    return {
-      finalScriptSig: Buffer.from(''),
-      finalScriptWitness
-    }
-  }
-  for (let i = 0; i < vouts.length; i++) {
-    psbt.finalizeInput(i, finalizeInput)
-  }
-  const tx = psbt.extractTransaction()
-  const txid = await RPCClient.sendRawTransaction(tx.toHex())
-  console.log('final txid: ', txid)
+  const { height } = blockHeader;
+  console.log("BlockHeight: " + height + ", Header: " + rawBlockHeader);
+  const merkleProof = await electrum.getMerkle(txid, height)
+  console.log('merkle proof: ', merkleProof)
 }
 
-main()
+main();

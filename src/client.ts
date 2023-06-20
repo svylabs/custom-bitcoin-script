@@ -56,14 +56,17 @@ export class RPCClient {
   static getBlockHeader(hash: string) {
     return client.getBlockHeader(hash)
   }
+  static getRawBlockHeader(hash: string) {
+    return client.getBlockHeader(hash, false)
+  }
   static getBestBlockHash() {
     return client.getBestBlockHash()
   }
   static getTransaction(hash: string) {
     return client.getTransaction(hash)
   }
-  static loadWallet(name: string) {
-    return client.loadWallet(name)
+  static createWallet(name: string) {
+    return client.createWallet(name)
   }
   static sendRawTransaction(rawtx: string) {
     return client.sendRawTransaction(rawtx)
