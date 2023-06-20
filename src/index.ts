@@ -126,7 +126,9 @@ const main = async () => {
     await RPCClient.generateToAddress(100, address)
   }
   const balance = await RPCClient.getBalance()
-  console.log('balance: ', balance)
+  console.log('balance: ', balance);
+  let blockIds = await RPCClient.generateToAddress(1, address) as string[]
+  await sleep(1000);
 
   const fundingTxIds: string[] = []
   for(let i = 0; i < addresses.length; i++) {
@@ -134,7 +136,7 @@ const main = async () => {
     console.log(`Sent funds to ${addresses[i]}, txid: `, txid)
     fundingTxIds.push(txid as string)
   }
-  const blockIds = await RPCClient.generateToAddress(1, address) as string[]
+  blockIds = await RPCClient.generateToAddress(1, address) as string[]
   await sleep(1000)
   console.log('blocks id: ', blockIds)
   const blockHeader = await RPCClient.getBlockHeader(blockIds[0])
