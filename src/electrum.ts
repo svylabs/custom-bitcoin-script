@@ -1,4 +1,4 @@
-import { ElectrumClient } from 'electrum-client-ts'
+import { ElectrumClient } from '@gemlinkofficial/electrum-client-ts'
 
 export type CallbackType = (args: any[]) => void
 
@@ -32,9 +32,9 @@ export class ElectrumService {
   }
 
   private readonly electrum = new ElectrumClient(
-    process.env.ELECTRUM_HOST,
-    parseInt(process.env.ELECTRUM_PORT as string),
-    process.env.ELECTRUM_PROTOCOL
+    process.env.ELECTRUM_HOST || "0.0.0.0",
+    parseInt(process.env.ELECTRUM_PORT || "50000" as string),
+    process.env.ELECTRUM_PROTOCOL || 'tcp'
   )
 
   private _isConnected = false
@@ -55,7 +55,7 @@ export class ElectrumService {
         callback: (e: any) => console.log('connect callback. e: ', e)
       })
       this.isConnected = true
-      this.electrum.onEnd = (error) => {
+      this.electrum.onEnd = (error: Error) => {
         console.log('The connection was closed on us, re-connecting')
         this.electrum.reconnect()
       }

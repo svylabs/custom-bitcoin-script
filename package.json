@@ -16,14 +16,14 @@
     "@types/node": "^20.2.5",
     "nodemon": "^2.0.22",
     "rimraf": "^5.0.1",
-    "typescript": "^5.0.4"
+    "typescript": "^5.1.3"
   },
   "dependencies": {
+    "@gemlinkofficial/electrum-client-ts": "^0.1.28",
     "bitcoin-core": "^4.1.0",
-    "bitcoinjs-lib": "^6.1.1",
+    "bitcoinjs-lib": "^6.1.3",
     "dotenv": "^16.0.3",
     "ecpair": "^2.1.0",
-    "electrum-client-ts": "github:bilthon/electrum-client-ts#master",
     "tiny-secp256k1": "^2.2.1"
   }
 }
