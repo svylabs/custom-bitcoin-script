@@ -24,6 +24,7 @@
     "bitcoinjs-lib": "^6.1.3",
     "dotenv": "^16.0.3",
     "ecpair": "^2.1.0",
-    "tiny-secp256k1": "^2.2.1"
+    "tiny-secp256k1": "^2.2.1",
+    "ethers": "^6.6.0"
   }
 }
