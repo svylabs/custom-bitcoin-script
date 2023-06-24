@@ -17,6 +17,9 @@ export class RPCClient {
   static loadWallet(name: string) {
     return client.loadWallet(name)
   }
+  static getRawTransaction(txid: string) {
+    return client.getRawTransaction(txid)
+  }
   static getNewAddress() {
     return new Promise((resolve, reject) => {
       client.getNewAddress()

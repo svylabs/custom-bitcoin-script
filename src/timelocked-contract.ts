@@ -14,7 +14,8 @@ Buffer.toString = () => this !== undefined ? this.toString('hex') : '<>'
 
 const SATS_LOCKED_AMOUNT = 100E3
 const MINER_FEE = 1000
-const LOCKTIME_VALUE = 1855
+const LOCKTIME_VALUE = 1860
+const ENABLE_LOCKTIME = false
 
 const main = async () => {
   const bitcoinCoreWallet = new BitcoinCoreWallet()
@@ -52,6 +53,8 @@ const main = async () => {
 
   // Funding contract
   const txid: string = await bitcoinCoreWallet.fundAddress(address as string, 100E3 / 1E8)
+  const rawFundingTx = await RPCClient.getRawTransaction(txid)
+  console.log('> funding tx: ', rawFundingTx)
   await sleep(1000)
 
   // Generating new address
@@ -60,7 +63,6 @@ const main = async () => {
   // Constructing transaction that will spend from the contract with my key
   const txDetails = await RPCClient.getTransaction(txid)
   const prevTx = bitcoin.Transaction.fromHex(txDetails.hex)
-  console.log('funding tx: ', prevTx)
   const vouts: Vout[] = []
   prevTx.outs.forEach((out, index) => {
     if (out.value === SATS_LOCKED_AMOUNT) {
@@ -71,7 +73,7 @@ const main = async () => {
       })
     }
   })
-  console.log('Redeem script: ', bitcoin.script.toASM(redeemScript))
+  // Creating spending tx
   const psbt = new bitcoin.Psbt({ network: bitcoin.networks.regtest })
   for(let i = 0; i < vouts.length; i++) {
     psbt.addInput({
@@ -85,16 +87,18 @@ const main = async () => {
       sequence: 0xfffffffe
     })
   }
-  psbt.setLocktime(LOCKTIME_VALUE)
+  if (ENABLE_LOCKTIME) {
+    psbt.setLocktime(LOCKTIME_VALUE)
+  }
   psbt.addOutput({
     address: finalAddress,
     value: vouts.reduce((accum, vout) => accum + vout.amount, 0) - MINER_FEE
   })
   for (let i = 0; i < psbt.inputCount; i++) {
-    psbt.signInput(i, myPair)
+    psbt.signInput(i, counterpartyPair)
   }
   const finalizeInput = (inputIndex: number, input: PsbtInput, script: Buffer, isSegwit: boolean, isP2SH: boolean, isP2WSH: boolean) => {
-    const publicKey = myPair.publicKey
+    const publicKey = counterpartyPair.publicKey
     const redeemPayment = bitcoin.payments.p2wsh({
       redeem: {
         input: bitcoin.script.compile([
@@ -117,7 +121,7 @@ const main = async () => {
     psbt.finalizeInput(i, finalizeInput)
   }
   const tx = psbt.extractTransaction()
-  console.log('Spending tx: ', tx)
+  console.log('> Spending tx: ', tx.toHex())
   const finalTxId = await RPCClient.sendRawTransaction(tx.toHex())
   console.log('final txid: ', finalTxId)
 }
