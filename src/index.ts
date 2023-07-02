@@ -5,10 +5,14 @@ import * as ecc from 'tiny-secp256k1'
 import ECPairFactory from 'ecpair'
 import { RPCClient } from './client'
 import { ElectrumService } from './electrum'
-import { PsbtInput } from 'bip174/src/lib/interfaces';
+import { PsbtInput } from 'bip174/src/lib/interfaces'
 import { witnessStackToScriptWitness } from 'bitcoinjs-lib/src/psbt/psbtutils'
+import { timelockedContract } from './timelocked-contract'
+import { sleep } from './sleep'
 
 dotenv.config()
+
+timelockedContract()
 
 const ECPair = ECPairFactory(ecc)
 
@@ -44,12 +48,12 @@ const FIXED_ADDRESS_DATA = [
   },
 ]
 
-interface AddressData {
+export interface AddressData {
   orderId: Buffer
   privateKey: Buffer
 }
 
-interface Vout {
+export interface Vout {
   txid: string,
   index: number,
   amount: number
@@ -65,12 +69,6 @@ const generateAddressData = (count: number) : AddressData[] => {
     console.log(`order id: ${addressData[i].orderId.toString('hex')}, priv key: ${addressData[i].privateKey.toString('hex')}`)
   }
   return addressData
-}
-
-const sleep = (ms: number) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => resolve(0), ms)
-  })
 }
 
 const main = async () => {
@@ -212,4 +210,4 @@ const main = async () => {
   console.log('final txid: ', txid)
 }
 
-main()
+// main()

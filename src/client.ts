@@ -9,18 +9,16 @@ const client = new Client({
 
 export class RPCClient {
   static listWalletDir() {
-    return new Promise((resolve, reject) => {
-      client.listWalletDir()
-        .then((res: any) => resolve(res))
-        .catch((err: any) => reject(err))
-    })
+    return client.listWalletDir()
   }
   static listWallets() {
-    return new Promise((resolve, reject) => {
-      client.listWallets()
-        .then((res: any) => resolve(res))
-        .catch((err: any) => reject(err))
-    })
+    return client.listWallets()
+  }
+  static loadWallet(name: string) {
+    return client.loadWallet(name)
+  }
+  static getRawTransaction(txid: string) {
+    return client.getRawTransaction(txid)
   }
   static getNewAddress() {
     return new Promise((resolve, reject) => {
