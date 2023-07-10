@@ -14,8 +14,8 @@ Buffer.toString = () => this !== undefined ? this.toString('hex') : '<>'
 
 const SATS_LOCKED_AMOUNT = 100E3
 const MINER_FEE = 1000
-const LOCKTIME_VALUE = 1860
-const ENABLE_LOCKTIME = false
+const LOCKTIME_VALUE = 100
+const ENABLE_LOCKTIME = true
 
 const main = async () => {
   const bitcoinCoreWallet = new BitcoinCoreWallet()
@@ -28,6 +28,7 @@ const main = async () => {
   const counterpartyPubkeyHash = bitcoin.crypto.hash160(counterpartyPair.publicKey)
   
   const orderId = Buffer.from('20afdf67','hex')
+  const hashedSecret = bitcoin.crypto.hash256(Buffer.from("mysecret"));
   let redeemScript = bitcoin.script.compile([
     orderId,
     bitcoin.opcodes.OP_DROP,
@@ -35,7 +36,12 @@ const main = async () => {
     bitcoin.opcodes.OP_HASH160,
     counterpartyPubkeyHash, // counterparty pubKeyHash
     bitcoin.opcodes.OP_EQUAL,
-    bitcoin.opcodes.OP_NOTIF,
+    bitcoin.opcodes.OP_IF,
+    bitcoin.opcodes.OP_SWAP,
+    bitcoin.opcodes.OP_HASH256,
+    hashedSecret,
+    bitcoin.opcodes.OP_EQUALVERIFY,
+    bitcoin.opcodes.OP_ELSE,
     bitcoin.script.number.encode(LOCKTIME_VALUE), // populate the future timestamp or future block number here
     bitcoin.opcodes.OP_CHECKLOCKTIMEVERIFY,
     bitcoin.opcodes.OP_DROP,
@@ -95,16 +101,19 @@ const main = async () => {
     value: vouts.reduce((accum, vout) => accum + vout.amount, 0) - MINER_FEE
   })
   for (let i = 0; i < psbt.inputCount; i++) {
+    //psbt.signInput(i, myPair)
     psbt.signInput(i, counterpartyPair)
   }
   const finalizeInput = (inputIndex: number, input: PsbtInput, script: Buffer, isSegwit: boolean, isP2SH: boolean, isP2WSH: boolean) => {
+    //const publicKey = myPair.publicKey
     const publicKey = counterpartyPair.publicKey
     const redeemPayment = bitcoin.payments.p2wsh({
       redeem: {
         input: bitcoin.script.compile([
           // @ts-ignore
           input.partialSig[0].signature,
-          publicKey
+          Buffer.from("mysecret"), // for counterparty
+          publicKey,
         ]),
         output: input.witnessScript
       }

@@ -107,6 +107,15 @@ const main = async () => {
     addresses.push(address as string)
     console.log(`order id: ${orderId.toString('hex')}, public key: ${publicKey.toString('hex')} -> ${address}`)
   })
+  try {
+    console.log("Creating")
+    await RPCClient.loadWallet(WALLET_NAME);
+    console.log("Created");
+  } catch (e) {
+    console.log("Error");
+    console.log(e);
+  }
+  console.log("List wallet dir");
   // 2- Loading wallet and funding newly created addresses
   const walletDir = await RPCClient.listWalletDir()
   console.log('wallet dir: ', walletDir)
@@ -210,4 +219,4 @@ const main = async () => {
   console.log('final txid: ', txid)
 }
 
-// main()
+main()

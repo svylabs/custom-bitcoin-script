@@ -33,7 +33,7 @@ export class ElectrumService {
 
   private readonly electrum = new ElectrumClient(
     process.env.ELECTRUM_HOST || "0.0.0.0",
-    parseInt(process.env.ELECTRUM_PORT || "50000" as string),
+    parseInt(process.env.ELECTRUM_PORT || "30000" as string),
     process.env.ELECTRUM_PROTOCOL || 'tcp'
   )
 

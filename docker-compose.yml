@@ -55,12 +55,11 @@ services:
       - --daemon-p2p-addr
       - bitcoin-dev:18444
       - --electrum-rpc-addr
-      - 0.0.0.0:50000
+      - 0.0.0.0:30000
     depends_on:
       - bitcoin-dev
     ports:
-      - 50000:50000
-      - 30000:30000
+      - "30000"
     volumes:
       - ./.electrs.dev/:/.electrs
       - ./.bitcoin.dev/:/.bitcoin
